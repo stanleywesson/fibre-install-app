@@ -51,10 +51,21 @@ export interface Job {
   scheduledDate?: Date
   completedDate?: Date
   notes?: string
+  deviceCount: number // Number of devices to install (default 1)
   createdAt: Date
 }
 
 // Installation types
+export interface Device {
+  deviceNumber: number // 1, 2, 3, etc.
+  installationComplete: boolean
+  installationPhotos: string[] // Photos of installed equipment
+  installationCompletedAt?: Date
+  serialComplete: boolean
+  serialPhotos: string[] // Photos of serial number
+  serialCompletedAt?: Date
+}
+
 export interface Installation {
   id: number
   jobId: number
@@ -62,19 +73,11 @@ export interface Installation {
   startedAt: Date
   completedAt?: Date
 
-  // Step 1: Install Equipment
-  step1Complete: boolean
-  step1Photos: string[] // Array of photo URLs/filenames (max 10, typically 2)
-  step1CompletedAt?: Date
+  devices: Device[] // Array of devices to install
 
-  // Step 2: Scan Serial Number
-  step2Complete: boolean
-  step2Photos: string[] // Array of photo URLs/filenames (max 10, typically 2)
-  step2CompletedAt?: Date
-
-  // Step 3: Activate
-  step3Complete: boolean
-  step3CompletedAt?: Date
+  // Step 3: Activate (only after all devices complete)
+  activationComplete: boolean
+  activationCompletedAt?: Date
 
   notes?: string
 }

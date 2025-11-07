@@ -469,12 +469,32 @@ export async function getInstallationByJobId(jobId: number): Promise<ApiResponse
   }
 }
 
-export async function createInstallation(installationData: Omit<Installation, 'id'>): Promise<ApiResponse<Installation>> {
+export async function createInstallation(installationData: Omit<Installation, 'id' | 'devices'>): Promise<ApiResponse<Installation>> {
   await delay()
+
+  // Find the job to get device count
+  const job = mockJobs.find(j => j.id === installationData.jobId)
+  if (!job) {
+    return {
+      success: false,
+      message: 'Job not found'
+    }
+  }
+
+  // Initialize devices array based on job's deviceCount
+  const devices = Array.from({ length: job.deviceCount }, (_, index) => ({
+    deviceNumber: index + 1,
+    installationComplete: false,
+    installationPhotos: [],
+    serialComplete: false,
+    serialPhotos: []
+  }))
 
   const newInstallation: Installation = {
     ...installationData,
-    id: getNextInstallationId()
+    id: getNextInstallationId(),
+    devices,
+    activationComplete: false
   }
 
   mockInstallations.push(newInstallation)
@@ -509,9 +529,10 @@ export async function updateInstallation(id: number, installationData: Partial<I
     id // Prevent ID from being changed
   }
 
-  // If all steps complete, update job status to Pending Activation
+  // If all devices complete, update job status to Pending Activation
   const installation = mockInstallations[installationIndex]
-  if (installation.step1Complete && installation.step2Complete && installation.step3Complete) {
+  const allDevicesComplete = installation.devices.every(d => d.installationComplete && d.serialComplete)
+  if (installation.activationComplete && allDevicesComplete) {
     const jobIndex = mockJobs.findIndex(j => j.id === installation.jobId)
     if (jobIndex !== -1) {
       mockJobs[jobIndex].status = 'Pending Activation'
@@ -524,84 +545,10 @@ export async function updateInstallation(id: number, installationData: Partial<I
   }
 }
 
-export async function completeInstallationStep(
+// Add photo to device installation
+export async function addDeviceInstallationPhoto(
   installationId: number,
-  step: 1 | 2 | 3,
-  photos?: string[]
-): Promise<ApiResponse<Installation>> {
-  await delay()
-
-  const installationIndex = mockInstallations.findIndex(i => i.id === installationId)
-
-  if (installationIndex === -1) {
-    return {
-      success: false,
-      message: 'Installation not found'
-    }
-  }
-
-  const installation = mockInstallations[installationIndex]
-
-  // Validate sequential completion
-  if (step === 2 && !installation.step1Complete) {
-    return {
-      success: false,
-      message: 'Must complete Step 1 before Step 2'
-    }
-  }
-
-  if (step === 3 && (!installation.step1Complete || !installation.step2Complete)) {
-    return {
-      success: false,
-      message: 'Must complete Steps 1 and 2 before Step 3'
-    }
-  }
-
-  // Step 3 can fail programmatically (10% chance for demo)
-  if (step === 3 && Math.random() < 0.1) {
-    // Set job to Hold-Over
-    const jobIndex = mockJobs.findIndex(j => j.id === installation.jobId)
-    if (jobIndex !== -1) {
-      mockJobs[jobIndex].status = 'Hold-Over'
-      mockJobs[jobIndex].notes = 'Activation queue failure - automatic hold-over'
-    }
-
-    return {
-      success: false,
-      message: 'Activation failed - job moved to Hold-Over status'
-    }
-  }
-
-  // Update the specific step
-  if (step === 1) {
-    installation.step1Complete = true
-    installation.step1Photos = photos || []
-    installation.step1CompletedAt = new Date()
-  } else if (step === 2) {
-    installation.step2Complete = true
-    installation.step2Photos = photos || []
-    installation.step2CompletedAt = new Date()
-  } else if (step === 3) {
-    installation.step3Complete = true
-    installation.step3CompletedAt = new Date()
-    installation.completedAt = new Date()
-
-    // Update job status to Pending Activation
-    const jobIndex = mockJobs.findIndex(j => j.id === installation.jobId)
-    if (jobIndex !== -1) {
-      mockJobs[jobIndex].status = 'Pending Activation'
-    }
-  }
-
-  return {
-    success: true,
-    data: installation
-  }
-}
-
-export async function addInstallationPhoto(
-  installationId: number,
-  step: 1 | 2,
+  deviceNumber: number,
   photoUrl: string
 ): Promise<ApiResponse<Installation>> {
   await delay(300)
@@ -616,32 +563,224 @@ export async function addInstallationPhoto(
   }
 
   const installation = mockInstallations[installationIndex]
+  const device = installation.devices.find(d => d.deviceNumber === deviceNumber)
 
-  if (step === 1) {
-    if (installation.step1Photos.length >= 10) {
-      return {
-        success: false,
-        message: 'Maximum 10 photos allowed per step'
-      }
+  if (!device) {
+    return {
+      success: false,
+      message: 'Device not found'
     }
-    // Create new array to trigger reactivity
-    installation.step1Photos = [...installation.step1Photos, photoUrl]
-  } else if (step === 2) {
-    if (installation.step2Photos.length >= 10) {
-      return {
-        success: false,
-        message: 'Maximum 10 photos allowed per step'
-      }
-    }
-    // Create new array to trigger reactivity
-    installation.step2Photos = [...installation.step2Photos, photoUrl]
   }
 
+  if (device.installationPhotos.length >= 10) {
+    return {
+      success: false,
+      message: 'Maximum 10 photos allowed per device'
+    }
+  }
+
+  // Create new array to trigger reactivity
+  device.installationPhotos = [...device.installationPhotos, photoUrl]
+
   // Return a new object reference to ensure reactivity
-  const updatedInstallation = { ...installation }
+  const updatedInstallation = { ...installation, devices: [...installation.devices] }
 
   return {
     success: true,
     data: updatedInstallation
+  }
+}
+
+// Add photo to device serial
+export async function addDeviceSerialPhoto(
+  installationId: number,
+  deviceNumber: number,
+  photoUrl: string
+): Promise<ApiResponse<Installation>> {
+  await delay(300)
+
+  const installationIndex = mockInstallations.findIndex(i => i.id === installationId)
+
+  if (installationIndex === -1) {
+    return {
+      success: false,
+      message: 'Installation not found'
+    }
+  }
+
+  const installation = mockInstallations[installationIndex]
+  const device = installation.devices.find(d => d.deviceNumber === deviceNumber)
+
+  if (!device) {
+    return {
+      success: false,
+      message: 'Device not found'
+    }
+  }
+
+  if (device.serialPhotos.length >= 10) {
+    return {
+      success: false,
+      message: 'Maximum 10 photos allowed per device'
+    }
+  }
+
+  // Create new array to trigger reactivity
+  device.serialPhotos = [...device.serialPhotos, photoUrl]
+
+  // Return a new object reference to ensure reactivity
+  const updatedInstallation = { ...installation, devices: [...installation.devices] }
+
+  return {
+    success: true,
+    data: updatedInstallation
+  }
+}
+
+// Complete device installation step
+export async function completeDeviceInstallation(
+  installationId: number,
+  deviceNumber: number
+): Promise<ApiResponse<Installation>> {
+  await delay()
+
+  const installationIndex = mockInstallations.findIndex(i => i.id === installationId)
+
+  if (installationIndex === -1) {
+    return {
+      success: false,
+      message: 'Installation not found'
+    }
+  }
+
+  const installation = mockInstallations[installationIndex]
+  const device = installation.devices.find(d => d.deviceNumber === deviceNumber)
+
+  if (!device) {
+    return {
+      success: false,
+      message: 'Device not found'
+    }
+  }
+
+  if (device.installationPhotos.length === 0) {
+    return {
+      success: false,
+      message: 'At least one installation photo is required'
+    }
+  }
+
+  device.installationComplete = true
+  device.installationCompletedAt = new Date()
+
+  return {
+    success: true,
+    data: installation
+  }
+}
+
+// Complete device serial step
+export async function completeDeviceSerial(
+  installationId: number,
+  deviceNumber: number
+): Promise<ApiResponse<Installation>> {
+  await delay()
+
+  const installationIndex = mockInstallations.findIndex(i => i.id === installationId)
+
+  if (installationIndex === -1) {
+    return {
+      success: false,
+      message: 'Installation not found'
+    }
+  }
+
+  const installation = mockInstallations[installationIndex]
+  const device = installation.devices.find(d => d.deviceNumber === deviceNumber)
+
+  if (!device) {
+    return {
+      success: false,
+      message: 'Device not found'
+    }
+  }
+
+  if (!device.installationComplete) {
+    return {
+      success: false,
+      message: 'Must complete installation before serial'
+    }
+  }
+
+  if (device.serialPhotos.length === 0) {
+    return {
+      success: false,
+      message: 'At least one serial photo is required'
+    }
+  }
+
+  device.serialComplete = true
+  device.serialCompletedAt = new Date()
+
+  return {
+    success: true,
+    data: installation
+  }
+}
+
+// Activate installation (final step after all devices complete)
+export async function activateInstallation(
+  installationId: number
+): Promise<ApiResponse<Installation>> {
+  await delay()
+
+  const installationIndex = mockInstallations.findIndex(i => i.id === installationId)
+
+  if (installationIndex === -1) {
+    return {
+      success: false,
+      message: 'Installation not found'
+    }
+  }
+
+  const installation = mockInstallations[installationIndex]
+
+  // Check all devices are complete
+  const allDevicesComplete = installation.devices.every(d => d.installationComplete && d.serialComplete)
+  if (!allDevicesComplete) {
+    return {
+      success: false,
+      message: 'All devices must be installed and scanned before activation'
+    }
+  }
+
+  // Activation can fail programmatically (10% chance for demo)
+  if (Math.random() < 0.1) {
+    // Set job to Hold-Over
+    const jobIndex = mockJobs.findIndex(j => j.id === installation.jobId)
+    if (jobIndex !== -1) {
+      mockJobs[jobIndex].status = 'Hold-Over'
+      mockJobs[jobIndex].notes = 'Activation queue failure - automatic hold-over'
+    }
+
+    return {
+      success: false,
+      message: 'Activation failed - job moved to Hold-Over status'
+    }
+  }
+
+  installation.activationComplete = true
+  installation.activationCompletedAt = new Date()
+  installation.completedAt = new Date()
+
+  // Update job status to Pending Activation
+  const jobIndex = mockJobs.findIndex(j => j.id === installation.jobId)
+  if (jobIndex !== -1) {
+    mockJobs[jobIndex].status = 'Pending Activation'
+  }
+
+  return {
+    success: true,
+    data: installation
   }
 }

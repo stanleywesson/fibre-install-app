@@ -7,8 +7,11 @@ import {
   getInstallationByJobId,
   createInstallation,
   updateInstallation,
-  completeInstallationStep,
-  addInstallationPhoto
+  addDeviceInstallationPhoto,
+  addDeviceSerialPhoto,
+  completeDeviceInstallation,
+  completeDeviceSerial,
+  activateInstallation
 } from '@/api/mockApi'
 
 export const useInstallationsStore = defineStore('installations', () => {
@@ -93,21 +96,16 @@ export const useInstallationsStore = defineStore('installations', () => {
     error.value = null
 
     try {
-      const newInstallation: Omit<Installation, 'id'> = {
+      const newInstallation: Omit<Installation, 'id' | 'devices' | 'activationComplete'> = {
         jobId,
         installerId,
-        startedAt: new Date(),
-        step1Complete: false,
-        step1Photos: [],
-        step2Complete: false,
-        step2Photos: [],
-        step3Complete: false
+        startedAt: new Date()
       }
 
       const response = await createInstallation(newInstallation)
 
       if (response.success && response.data) {
-        installations.value.push(response.data)
+        installations.value = [...installations.value, response.data]
         currentInstallation.value = response.data
         return response.data
       } else {
@@ -152,46 +150,17 @@ export const useInstallationsStore = defineStore('installations', () => {
     }
   }
 
-  async function completeStep(installationId: number, step: 1 | 2 | 3, photos?: string[]) {
+  async function addInstallPhoto(installationId: number, deviceNumber: number, photoUrl: string) {
     loading.value = true
     error.value = null
 
     try {
-      const response = await completeInstallationStep(installationId, step, photos)
+      const response = await addDeviceInstallationPhoto(installationId, deviceNumber, photoUrl)
 
       if (response.success && response.data) {
         const index = installations.value.findIndex(i => i.id === installationId)
         if (index !== -1) {
-          installations.value[index] = response.data
-        }
-        if (currentInstallation.value?.id === installationId) {
-          currentInstallation.value = response.data
-        }
-        return response.data
-      } else {
-        error.value = response.message || 'Failed to complete step'
-        return null
-      }
-    } catch (err) {
-      error.value = 'An error occurred while completing step'
-      console.error('Complete step error:', err)
-      return null
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function addPhoto(installationId: number, step: 1 | 2, photoUrl: string) {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await addInstallationPhoto(installationId, step, photoUrl)
-
-      if (response.success && response.data) {
-        const index = installations.value.findIndex(i => i.id === installationId)
-        if (index !== -1) {
-          installations.value[index] = response.data
+          installations.value = installations.value.map(i => i.id === installationId ? response.data! : i)
         }
         if (currentInstallation.value?.id === installationId) {
           currentInstallation.value = response.data
@@ -203,7 +172,123 @@ export const useInstallationsStore = defineStore('installations', () => {
       }
     } catch (err) {
       error.value = 'An error occurred while adding photo'
-      console.error('Add photo error:', err)
+      console.error('Add installation photo error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function addSerialPhoto(installationId: number, deviceNumber: number, photoUrl: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await addDeviceSerialPhoto(installationId, deviceNumber, photoUrl)
+
+      if (response.success && response.data) {
+        const index = installations.value.findIndex(i => i.id === installationId)
+        if (index !== -1) {
+          installations.value = installations.value.map(i => i.id === installationId ? response.data! : i)
+        }
+        if (currentInstallation.value?.id === installationId) {
+          currentInstallation.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to add serial photo'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while adding serial photo'
+      console.error('Add serial photo error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function completeInstall(installationId: number, deviceNumber: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await completeDeviceInstallation(installationId, deviceNumber)
+
+      if (response.success && response.data) {
+        const index = installations.value.findIndex(i => i.id === installationId)
+        if (index !== -1) {
+          installations.value = installations.value.map(i => i.id === installationId ? response.data! : i)
+        }
+        if (currentInstallation.value?.id === installationId) {
+          currentInstallation.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to complete installation'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while completing installation'
+      console.error('Complete installation error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function completeSerial(installationId: number, deviceNumber: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await completeDeviceSerial(installationId, deviceNumber)
+
+      if (response.success && response.data) {
+        const index = installations.value.findIndex(i => i.id === installationId)
+        if (index !== -1) {
+          installations.value = installations.value.map(i => i.id === installationId ? response.data! : i)
+        }
+        if (currentInstallation.value?.id === installationId) {
+          currentInstallation.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to complete serial'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while completing serial'
+      console.error('Complete serial error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function activate(installationId: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await activateInstallation(installationId)
+
+      if (response.success && response.data) {
+        const index = installations.value.findIndex(i => i.id === installationId)
+        if (index !== -1) {
+          installations.value = installations.value.map(i => i.id === installationId ? response.data! : i)
+        }
+        if (currentInstallation.value?.id === installationId) {
+          currentInstallation.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to activate installation'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while activating installation'
+      console.error('Activate installation error:', err)
       return null
     } finally {
       loading.value = false
@@ -226,8 +311,11 @@ export const useInstallationsStore = defineStore('installations', () => {
     fetchInstallationByJobId,
     startInstallation,
     modifyInstallation,
-    completeStep,
-    addPhoto,
+    addInstallPhoto,
+    addSerialPhoto,
+    completeInstall,
+    completeSerial,
+    activate,
     clearError
   }
 })

@@ -212,6 +212,7 @@ export const mockJobs: Job[] = [
     companyId: 1,
     customerId: 1,
     status: 'New',
+    deviceCount: 2,
     createdAt: new Date('2025-01-05')
   },
   {
@@ -221,6 +222,7 @@ export const mockJobs: Job[] = [
     status: 'Assigned',
     assignedInstallerId: 4,
     supervisorId: 2,
+    deviceCount: 1,
     createdAt: new Date('2025-01-08')
   },
   {
@@ -231,6 +233,7 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 4,
     supervisorId: 2,
     scheduledDate: new Date('2025-01-20'),
+    deviceCount: 3,
     createdAt: new Date('2025-01-10')
   },
   {
@@ -241,6 +244,7 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 5,
     supervisorId: 2,
     scheduledDate: new Date('2025-01-15'),
+    deviceCount: 2,
     createdAt: new Date('2025-01-12')
   },
   {
@@ -251,6 +255,7 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 5,
     supervisorId: 2,
     scheduledDate: new Date('2025-01-14'),
+    deviceCount: 1,
     createdAt: new Date('2025-01-08')
   },
   {
@@ -262,6 +267,7 @@ export const mockJobs: Job[] = [
     supervisorId: 2,
     scheduledDate: new Date('2024-12-20'),
     completedDate: new Date('2024-12-21'),
+    deviceCount: 2,
     createdAt: new Date('2024-12-15')
   },
   {
@@ -273,6 +279,7 @@ export const mockJobs: Job[] = [
     supervisorId: 2,
     scheduledDate: new Date('2025-01-16'),
     notes: 'Customer unavailable at scheduled time',
+    deviceCount: 1,
     createdAt: new Date('2025-01-10')
   },
   // Company 2 - ConnectNet Services
@@ -281,6 +288,7 @@ export const mockJobs: Job[] = [
     companyId: 2,
     customerId: 8,
     status: 'New',
+    deviceCount: 2,
     createdAt: new Date('2025-01-06')
   },
   {
@@ -290,6 +298,7 @@ export const mockJobs: Job[] = [
     status: 'Assigned',
     assignedInstallerId: 6,
     supervisorId: 3,
+    deviceCount: 1,
     createdAt: new Date('2025-01-09')
   },
   {
@@ -300,6 +309,7 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 6,
     supervisorId: 3,
     scheduledDate: new Date('2025-01-22'),
+    deviceCount: 4,
     createdAt: new Date('2025-01-11')
   },
   {
@@ -310,6 +320,7 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 7,
     supervisorId: 3,
     scheduledDate: new Date('2025-01-16'),
+    deviceCount: 3,
     createdAt: new Date('2025-01-13')
   },
   {
@@ -320,6 +331,7 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 7,
     supervisorId: 3,
     scheduledDate: new Date('2025-01-15'),
+    deviceCount: 2,
     createdAt: new Date('2025-01-09')
   },
   {
@@ -331,6 +343,7 @@ export const mockJobs: Job[] = [
     supervisorId: 3,
     scheduledDate: new Date('2024-12-22'),
     completedDate: new Date('2024-12-23'),
+    deviceCount: 1,
     createdAt: new Date('2024-12-18')
   },
   {
@@ -342,6 +355,7 @@ export const mockJobs: Job[] = [
     supervisorId: 3,
     scheduledDate: new Date('2025-01-17'),
     notes: 'Equipment malfunction during installation',
+    deviceCount: 2,
     createdAt: new Date('2025-01-11')
   },
   // Company 3 - FibreLink Corp (unassigned jobs)
@@ -350,101 +364,175 @@ export const mockJobs: Job[] = [
     companyId: 3,
     customerId: 15,
     status: 'New',
+    deviceCount: 1,
     createdAt: new Date('2025-01-07')
   }
 ]
 
 export const mockInstallations: Installation[] = [
-  // Installation for Job 4 (In Progress - Step 1 complete)
+  // Installation for Job 4 (In Progress - 2 devices, device 1 complete, device 2 in progress)
   {
     id: 1,
     jobId: 4,
     installerId: 5,
     startedAt: new Date('2025-01-15T09:00:00'),
-    step1Complete: true,
-    step1Photos: ['photo_job4_step1_1.jpg', 'photo_job4_step1_2.jpg'],
-    step1CompletedAt: new Date('2025-01-15T10:30:00'),
-    step2Complete: false,
-    step2Photos: [],
-    step3Complete: false
+    devices: [
+      {
+        deviceNumber: 1,
+        installationComplete: true,
+        installationPhotos: ['photo_job4_dev1_install_1.jpg', 'photo_job4_dev1_install_2.jpg'],
+        installationCompletedAt: new Date('2025-01-15T10:00:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job4_dev1_serial_1.jpg'],
+        serialCompletedAt: new Date('2025-01-15T10:30:00')
+      },
+      {
+        deviceNumber: 2,
+        installationComplete: false,
+        installationPhotos: [],
+        serialComplete: false,
+        serialPhotos: []
+      }
+    ],
+    activationComplete: false
   },
-  // Installation for Job 5 (Pending Activation - all steps complete)
+  // Installation for Job 5 (Pending Activation - 1 device, all complete)
   {
     id: 2,
     jobId: 5,
     installerId: 5,
     startedAt: new Date('2025-01-14T08:00:00'),
     completedAt: new Date('2025-01-14T12:00:00'),
-    step1Complete: true,
-    step1Photos: ['photo_job5_step1_1.jpg', 'photo_job5_step1_2.jpg'],
-    step1CompletedAt: new Date('2025-01-14T09:30:00'),
-    step2Complete: true,
-    step2Photos: ['photo_job5_step2_1.jpg', 'photo_job5_step2_2.jpg'],
-    step2CompletedAt: new Date('2025-01-14T11:00:00'),
-    step3Complete: true,
-    step3CompletedAt: new Date('2025-01-14T11:45:00')
+    devices: [
+      {
+        deviceNumber: 1,
+        installationComplete: true,
+        installationPhotos: ['photo_job5_dev1_install_1.jpg', 'photo_job5_dev1_install_2.jpg'],
+        installationCompletedAt: new Date('2025-01-14T09:30:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job5_dev1_serial_1.jpg', 'photo_job5_dev1_serial_2.jpg'],
+        serialCompletedAt: new Date('2025-01-14T11:00:00')
+      }
+    ],
+    activationComplete: true,
+    activationCompletedAt: new Date('2025-01-14T11:45:00')
   },
-  // Installation for Job 6 (Completed)
+  // Installation for Job 6 (Completed - 2 devices)
   {
     id: 3,
     jobId: 6,
     installerId: 4,
     startedAt: new Date('2024-12-20T08:00:00'),
     completedAt: new Date('2024-12-20T13:00:00'),
-    step1Complete: true,
-    step1Photos: ['photo_job6_step1_1.jpg', 'photo_job6_step1_2.jpg'],
-    step1CompletedAt: new Date('2024-12-20T10:00:00'),
-    step2Complete: true,
-    step2Photos: ['photo_job6_step2_1.jpg', 'photo_job6_step2_2.jpg'],
-    step2CompletedAt: new Date('2024-12-20T11:30:00'),
-    step3Complete: true,
-    step3CompletedAt: new Date('2024-12-20T12:30:00')
+    devices: [
+      {
+        deviceNumber: 1,
+        installationComplete: true,
+        installationPhotos: ['photo_job6_dev1_install_1.jpg', 'photo_job6_dev1_install_2.jpg'],
+        installationCompletedAt: new Date('2024-12-20T09:30:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job6_dev1_serial_1.jpg'],
+        serialCompletedAt: new Date('2024-12-20T10:00:00')
+      },
+      {
+        deviceNumber: 2,
+        installationComplete: true,
+        installationPhotos: ['photo_job6_dev2_install_1.jpg'],
+        installationCompletedAt: new Date('2024-12-20T11:00:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job6_dev2_serial_1.jpg'],
+        serialCompletedAt: new Date('2024-12-20T11:30:00')
+      }
+    ],
+    activationComplete: true,
+    activationCompletedAt: new Date('2024-12-20T12:30:00')
   },
-  // Installation for Job 11 (In Progress - Steps 1 and 2 complete)
+  // Installation for Job 11 (In Progress - 3 devices, 2 complete, 1 partial)
   {
     id: 4,
     jobId: 11,
     installerId: 7,
     startedAt: new Date('2025-01-16T09:00:00'),
-    step1Complete: true,
-    step1Photos: ['photo_job11_step1_1.jpg', 'photo_job11_step1_2.jpg'],
-    step1CompletedAt: new Date('2025-01-16T10:30:00'),
-    step2Complete: true,
-    step2Photos: ['photo_job11_step2_1.jpg', 'photo_job11_step2_2.jpg'],
-    step2CompletedAt: new Date('2025-01-16T11:45:00'),
-    step3Complete: false
+    devices: [
+      {
+        deviceNumber: 1,
+        installationComplete: true,
+        installationPhotos: ['photo_job11_dev1_install_1.jpg', 'photo_job11_dev1_install_2.jpg'],
+        installationCompletedAt: new Date('2025-01-16T09:45:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job11_dev1_serial_1.jpg'],
+        serialCompletedAt: new Date('2025-01-16T10:00:00')
+      },
+      {
+        deviceNumber: 2,
+        installationComplete: true,
+        installationPhotos: ['photo_job11_dev2_install_1.jpg'],
+        installationCompletedAt: new Date('2025-01-16T10:30:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job11_dev2_serial_1.jpg'],
+        serialCompletedAt: new Date('2025-01-16T10:45:00')
+      },
+      {
+        deviceNumber: 3,
+        installationComplete: true,
+        installationPhotos: ['photo_job11_dev3_install_1.jpg'],
+        installationCompletedAt: new Date('2025-01-16T11:15:00'),
+        serialComplete: false,
+        serialPhotos: []
+      }
+    ],
+    activationComplete: false
   },
-  // Installation for Job 12 (Pending Activation)
+  // Installation for Job 12 (Pending Activation - 2 devices)
   {
     id: 5,
     jobId: 12,
     installerId: 7,
     startedAt: new Date('2025-01-15T08:00:00'),
     completedAt: new Date('2025-01-15T12:30:00'),
-    step1Complete: true,
-    step1Photos: ['photo_job12_step1_1.jpg', 'photo_job12_step1_2.jpg'],
-    step1CompletedAt: new Date('2025-01-15T09:30:00'),
-    step2Complete: true,
-    step2Photos: ['photo_job12_step2_1.jpg', 'photo_job12_step2_2.jpg'],
-    step2CompletedAt: new Date('2025-01-15T11:00:00'),
-    step3Complete: true,
-    step3CompletedAt: new Date('2025-01-15T12:15:00')
+    devices: [
+      {
+        deviceNumber: 1,
+        installationComplete: true,
+        installationPhotos: ['photo_job12_dev1_install_1.jpg', 'photo_job12_dev1_install_2.jpg'],
+        installationCompletedAt: new Date('2025-01-15T09:00:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job12_dev1_serial_1.jpg'],
+        serialCompletedAt: new Date('2025-01-15T09:30:00')
+      },
+      {
+        deviceNumber: 2,
+        installationComplete: true,
+        installationPhotos: ['photo_job12_dev2_install_1.jpg'],
+        installationCompletedAt: new Date('2025-01-15T10:30:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job12_dev2_serial_1.jpg'],
+        serialCompletedAt: new Date('2025-01-15T11:00:00')
+      }
+    ],
+    activationComplete: true,
+    activationCompletedAt: new Date('2025-01-15T12:15:00')
   },
-  // Installation for Job 13 (Completed)
+  // Installation for Job 13 (Completed - 1 device)
   {
     id: 6,
     jobId: 13,
     installerId: 6,
     startedAt: new Date('2024-12-22T08:00:00'),
     completedAt: new Date('2024-12-22T13:30:00'),
-    step1Complete: true,
-    step1Photos: ['photo_job13_step1_1.jpg', 'photo_job13_step1_2.jpg'],
-    step1CompletedAt: new Date('2024-12-22T10:00:00'),
-    step2Complete: true,
-    step2Photos: ['photo_job13_step2_1.jpg', 'photo_job13_step2_2.jpg'],
-    step2CompletedAt: new Date('2024-12-22T11:30:00'),
-    step3Complete: true,
-    step3CompletedAt: new Date('2024-12-22T13:00:00')
+    devices: [
+      {
+        deviceNumber: 1,
+        installationComplete: true,
+        installationPhotos: ['photo_job13_dev1_install_1.jpg', 'photo_job13_dev1_install_2.jpg'],
+        installationCompletedAt: new Date('2024-12-22T10:00:00'),
+        serialComplete: true,
+        serialPhotos: ['photo_job13_dev1_serial_1.jpg', 'photo_job13_dev1_serial_2.jpg'],
+        serialCompletedAt: new Date('2024-12-22T11:30:00')
+      }
+    ],
+    activationComplete: true,
+    activationCompletedAt: new Date('2024-12-22T13:00:00')
   }
 ]
 
