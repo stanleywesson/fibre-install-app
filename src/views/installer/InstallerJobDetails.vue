@@ -120,6 +120,9 @@
           </div>
         </div>
 
+        <!-- Timeline -->
+        <JobTimeline v-if="currentJob" :job="currentJob" :installation="installation" />
+
         <!-- Actions -->
         <div class="bg-white shadow sm:rounded-lg p-6 mb-6">
           <h2 class="text-lg font-medium mb-4">Actions</h2>
@@ -164,14 +167,17 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import AppMenu from '@/components/AppMenu.vue'
+import JobTimeline from '@/components/JobTimeline.vue'
 import { useJobsStore } from '@/stores/jobs'
 import { useCustomersStore } from '@/stores/customers'
+import { useInstallationsStore } from '@/stores/installations'
 import type { JobStatus } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
 const jobsStore = useJobsStore()
 const customersStore = useCustomersStore()
+const installationsStore = useInstallationsStore()
 
 const otpInput = ref('')
 const verifyingOtp = ref(false)
@@ -181,6 +187,7 @@ const markingEnroute = ref(false)
 
 const currentJob = computed(() => jobsStore.currentJob)
 const customer = computed(() => currentJob.value ? customersStore.getCustomerById_sync(currentJob.value.customerId) : null)
+const installation = computed(() => installationsStore.currentInstallation)
 
 const canStartInstallation = computed(() => {
   if (!currentJob.value) return false
@@ -254,5 +261,6 @@ onMounted(async () => {
   const jobId = parseInt(route.params.id as string)
   await jobsStore.fetchJobById(jobId)
   await customersStore.fetchCustomers()
+  await installationsStore.fetchInstallationByJobId(jobId)
 })
 </script>
