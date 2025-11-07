@@ -427,6 +427,55 @@ export async function setJobHoldOver(jobId: number, notes: string): Promise<ApiR
   }
 }
 
+export async function verifyJobOtp(jobId: number, enteredOtp: string): Promise<ApiResponse<Job>> {
+  await delay()
+
+  const jobIndex = mockJobs.findIndex(j => j.id === jobId)
+
+  if (jobIndex === -1) {
+    return {
+      success: false,
+      message: 'Job not found'
+    }
+  }
+
+  const job = mockJobs[jobIndex]
+
+  if (!job.customerOtp) {
+    return {
+      success: false,
+      message: 'No OTP set for this job'
+    }
+  }
+
+  if (job.otpVerified) {
+    return {
+      success: true,
+      data: job,
+      message: 'OTP already verified'
+    }
+  }
+
+  if (enteredOtp !== job.customerOtp) {
+    return {
+      success: false,
+      message: 'Invalid OTP. Please try again.'
+    }
+  }
+
+  mockJobs[jobIndex] = {
+    ...mockJobs[jobIndex],
+    otpVerified: true,
+    otpVerifiedAt: new Date()
+  }
+
+  return {
+    success: true,
+    data: mockJobs[jobIndex],
+    message: 'OTP verified successfully'
+  }
+}
+
 // ==================== INSTALLATION API ====================
 
 export async function getInstallations(): Promise<ApiResponse<Installation[]>> {

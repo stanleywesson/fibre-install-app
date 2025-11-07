@@ -234,6 +234,8 @@ export const mockJobs: Job[] = [
     supervisorId: 2,
     scheduledDate: new Date('2025-01-20'),
     deviceCount: 3,
+    customerOtp: '1234',
+    otpVerified: false,
     createdAt: new Date('2025-01-10')
   },
   {
@@ -245,6 +247,9 @@ export const mockJobs: Job[] = [
     supervisorId: 2,
     scheduledDate: new Date('2025-01-15'),
     deviceCount: 2,
+    customerOtp: '5678',
+    otpVerified: true,
+    otpVerifiedAt: new Date('2025-01-15T08:55:00'),
     createdAt: new Date('2025-01-12')
   },
   {
@@ -310,6 +315,8 @@ export const mockJobs: Job[] = [
     supervisorId: 3,
     scheduledDate: new Date('2025-01-22'),
     deviceCount: 4,
+    customerOtp: '9012',
+    otpVerified: false,
     createdAt: new Date('2025-01-11')
   },
   {

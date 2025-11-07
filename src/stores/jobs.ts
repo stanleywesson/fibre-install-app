@@ -10,7 +10,8 @@ import {
   assignJob,
   scheduleJob,
   resolveHoldOver,
-  setJobHoldOver
+  setJobHoldOver,
+  verifyJobOtp
 } from '@/api/mockApi'
 
 export const useJobsStore = defineStore('jobs', () => {
@@ -279,6 +280,35 @@ export const useJobsStore = defineStore('jobs', () => {
     })
   }
 
+  async function verifyOtp(jobId: number, enteredOtp: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await verifyJobOtp(jobId, enteredOtp)
+
+      if (response.success && response.data) {
+        const index = jobs.value.findIndex(j => j.id === jobId)
+        if (index !== -1) {
+          jobs.value[index] = response.data
+        }
+        if (currentJob.value?.id === jobId) {
+          currentJob.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to verify OTP'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while verifying OTP'
+      console.error('Verify OTP error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   function clearError() {
     error.value = null
   }
@@ -308,6 +338,7 @@ export const useJobsStore = defineStore('jobs', () => {
     scheduleJobAppointment,
     resolveJobHoldOver,
     setJobToHoldOver,
+    verifyOtp,
     getJobsByStatus,
     getJobsByDateRange,
     clearError
