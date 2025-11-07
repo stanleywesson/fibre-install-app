@@ -30,8 +30,6 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.success && response.data) {
         user.value = response.data.user
         token.value = response.data.token
-
-        // Persist token
         localStorage.setItem(TOKEN_KEY, response.data.token)
 
         return true

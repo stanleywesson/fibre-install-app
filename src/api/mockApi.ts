@@ -65,7 +65,6 @@ export async function verifyToken(token: string): Promise<ApiResponse<User>> {
     }
   }
 
-  // Extract user ID from token
   const parts = token.split('-')
   const userId = parseInt(parts[3])
 
@@ -116,7 +115,6 @@ export async function getUserById(id: number): Promise<ApiResponse<User>> {
 export async function createUser(userData: Omit<User, 'id' | 'createdAt'>): Promise<ApiResponse<User>> {
   await delay()
 
-  // Check if username already exists
   if (mockUsers.some(u => u.username === userData.username)) {
     return {
       success: false,
@@ -499,7 +497,6 @@ export async function createInstallation(installationData: Omit<Installation, 'i
 
   mockInstallations.push(newInstallation)
 
-  // Update job status to "Installation in Progress"
   const jobIndex = mockJobs.findIndex(j => j.id === installationData.jobId)
   if (jobIndex !== -1) {
     mockJobs[jobIndex].status = 'Installation in Progress'
@@ -579,10 +576,7 @@ export async function addDeviceInstallationPhoto(
     }
   }
 
-  // Create new array to trigger reactivity
   device.installationPhotos = [...device.installationPhotos, photoUrl]
-
-  // Return a new object reference to ensure reactivity
   const updatedInstallation = { ...installation, devices: [...installation.devices] }
 
   return {
@@ -625,10 +619,7 @@ export async function addDeviceSerialPhoto(
     }
   }
 
-  // Create new array to trigger reactivity
   device.serialPhotos = [...device.serialPhotos, photoUrl]
-
-  // Return a new object reference to ensure reactivity
   const updatedInstallation = { ...installation, devices: [...installation.devices] }
 
   return {
@@ -773,7 +764,6 @@ export async function activateInstallation(
   installation.activationCompletedAt = new Date()
   installation.completedAt = new Date()
 
-  // Update job status to Pending Activation
   const jobIndex = mockJobs.findIndex(j => j.id === installation.jobId)
   if (jobIndex !== -1) {
     mockJobs[jobIndex].status = 'Pending Activation'

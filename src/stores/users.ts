@@ -94,7 +94,6 @@ export const useUsersStore = defineStore('users', () => {
       const response = await createUser(userData)
 
       if (response.success && response.data) {
-        // Use immutable update to trigger reactivity and avoid duplicates
         users.value = [...users.value, response.data]
         return response.data
       } else {
@@ -118,7 +117,6 @@ export const useUsersStore = defineStore('users', () => {
       const response = await updateUser(id, userData)
 
       if (response.success && response.data) {
-        // Use immutable update to trigger reactivity
         users.value = users.value.map(u => u.id === id ? response.data! : u)
         return response.data
       } else {

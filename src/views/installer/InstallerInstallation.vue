@@ -256,7 +256,6 @@ async function activateEquipment() {
 
   const result = await installationsStore.activate(installation.value.id)
   if (result) {
-    // Fetch updated job status
     if (currentJob.value) {
       await jobsStore.fetchJobById(currentJob.value.id)
 
@@ -290,7 +289,6 @@ onMounted(async () => {
   const jobId = parseInt(route.params.id as string)
   await jobsStore.fetchJobById(jobId)
 
-  // Check if installation exists, if not create one
   await installationsStore.fetchInstallationByJobId(jobId)
 
   if (!installationsStore.currentInstallation && authStore.user?.id) {
