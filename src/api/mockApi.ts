@@ -3,6 +3,7 @@ import type {
   Company,
   Customer,
   Job,
+  JobComment,
   Installation,
   LoginCredentials,
   LoginResponse,
@@ -507,6 +508,42 @@ export async function markJobEnroute(jobId: number): Promise<ApiResponse<Job>> {
     success: true,
     data: mockJobs[jobIndex],
     message: 'Marked as enroute successfully'
+  }
+}
+
+let nextCommentId = 1
+
+export async function addJobComment(jobId: number, userId: number, userName: string, comment: string): Promise<ApiResponse<Job>> {
+  await delay()
+
+  const jobIndex = mockJobs.findIndex(j => j.id === jobId)
+
+  if (jobIndex === -1) {
+    return {
+      success: false,
+      message: 'Job not found'
+    }
+  }
+
+  const newComment: JobComment = {
+    id: nextCommentId++,
+    jobId,
+    userId,
+    userName,
+    comment,
+    createdAt: new Date()
+  }
+
+  if (!mockJobs[jobIndex].comments) {
+    mockJobs[jobIndex].comments = []
+  }
+
+  mockJobs[jobIndex].comments!.push(newComment)
+
+  return {
+    success: true,
+    data: mockJobs[jobIndex],
+    message: 'Comment added successfully'
   }
 }
 

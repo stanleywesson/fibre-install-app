@@ -123,6 +123,57 @@
         <!-- Timeline -->
         <JobTimeline v-if="currentJob" :job="currentJob" :installation="installation" />
 
+        <!-- Job Comments/Notes -->
+        <div v-if="currentJob" class="bg-white shadow sm:rounded-lg p-6 mb-6">
+          <h2 class="text-lg font-medium mb-4">Job Notes & Comments</h2>
+
+          <!-- Existing Comments -->
+          <div v-if="currentJob.comments && currentJob.comments.length > 0" class="space-y-4 mb-6">
+            <div
+              v-for="comment in sortedComments"
+              :key="comment.id"
+              class="border-l-4 border-blue-200 bg-gray-50 p-4 rounded-r"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span class="font-medium text-gray-900">{{ comment.userName }}</span>
+                </div>
+                <span class="text-sm text-gray-500">{{ formatCommentTime(comment.createdAt) }}</span>
+              </div>
+              <p class="text-gray-700 ml-7">{{ comment.comment }}</p>
+            </div>
+          </div>
+
+          <div v-else class="text-sm text-gray-500 mb-6 italic">No comments yet</div>
+
+          <!-- Add Comment Form -->
+          <form @submit.prevent="handleAddComment" class="mt-4">
+            <div class="mb-3">
+              <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Add a note</label>
+              <textarea
+                id="comment"
+                v-model="newComment"
+                rows="3"
+                placeholder="Add installation notes, issues, or updates..."
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                :disabled="addingComment"
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              :disabled="!newComment.trim() || addingComment"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ addingComment ? 'Adding...' : 'Add Comment' }}
+            </button>
+            <p v-if="commentError" class="mt-2 text-sm text-red-600">{{ commentError }}</p>
+            <p v-if="commentSuccess" class="mt-2 text-sm text-green-600">{{ commentSuccess }}</p>
+          </form>
+        </div>
+
         <!-- Actions -->
         <div class="bg-white shadow sm:rounded-lg p-6 mb-6">
           <h2 class="text-lg font-medium mb-4">Actions</h2>
@@ -171,6 +222,7 @@ import JobTimeline from '@/components/JobTimeline.vue'
 import { useJobsStore } from '@/stores/jobs'
 import { useCustomersStore } from '@/stores/customers'
 import { useInstallationsStore } from '@/stores/installations'
+import { useAuthStore } from '@/stores/auth'
 import type { JobStatus } from '@/types'
 
 const route = useRoute()
@@ -178,12 +230,18 @@ const router = useRouter()
 const jobsStore = useJobsStore()
 const customersStore = useCustomersStore()
 const installationsStore = useInstallationsStore()
+const authStore = useAuthStore()
 
 const otpInput = ref('')
 const verifyingOtp = ref(false)
 const otpError = ref('')
 const otpSuccess = ref('')
 const markingEnroute = ref(false)
+
+const newComment = ref('')
+const addingComment = ref(false)
+const commentError = ref('')
+const commentSuccess = ref('')
 
 const currentJob = computed(() => jobsStore.currentJob)
 const customer = computed(() => currentJob.value ? customersStore.getCustomerById_sync(currentJob.value.customerId) : null)
@@ -200,6 +258,25 @@ const getDirectionsUrl = computed(() => {
   const encodedAddress = encodeURIComponent(customer.value.address)
   return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
 })
+
+const sortedComments = computed(() => {
+  if (!currentJob.value?.comments) return []
+  return [...currentJob.value.comments].sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+})
+
+function formatCommentTime(date: Date): string {
+  const now = new Date()
+  const commentDate = new Date(date)
+  const diffInSeconds = Math.floor((now.getTime() - commentDate.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return 'Just now'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
+  return commentDate.toLocaleDateString()
+}
 
 function getStatusClass(status: JobStatus) {
   const classes = {
@@ -255,6 +332,33 @@ async function handleMarkEnroute() {
   }
 
   markingEnroute.value = false
+}
+
+async function handleAddComment() {
+  if (!currentJob.value || !newComment.value.trim() || !authStore.user) return
+
+  commentError.value = ''
+  commentSuccess.value = ''
+  addingComment.value = true
+
+  const result = await jobsStore.addComment(
+    currentJob.value.id,
+    authStore.user.id,
+    authStore.user.name,
+    newComment.value.trim()
+  )
+
+  if (result) {
+    commentSuccess.value = 'Comment added successfully!'
+    newComment.value = ''
+    setTimeout(() => {
+      commentSuccess.value = ''
+    }, 3000)
+  } else {
+    commentError.value = jobsStore.error || 'Failed to add comment. Please try again.'
+  }
+
+  addingComment.value = false
 }
 
 onMounted(async () => {

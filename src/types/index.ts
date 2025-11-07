@@ -41,6 +41,15 @@ export type JobStatus =
   | 'Completed'
   | 'Hold-Over'
 
+export interface JobComment {
+  id: number
+  jobId: number
+  userId: number
+  userName: string
+  comment: string
+  createdAt: Date
+}
+
 export interface Job {
   id: number
   companyId: number
@@ -56,6 +65,7 @@ export interface Job {
   otpVerified?: boolean // Whether installer has verified OTP with customer
   otpVerifiedAt?: Date // When OTP was verified
   enrouteAt?: Date // When installer marked "I'm on my way"
+  comments?: JobComment[] // Notes/comments added to the job
   createdAt: Date
 }
 
