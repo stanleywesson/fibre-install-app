@@ -104,36 +104,45 @@
               </div>
 
               <!-- Inventory Tracking -->
-              <div v-if="device.installationComplete">
-                <h3 class="text-md font-medium mb-2 flex items-center">
-                  <span>Track Equipment Used</span>
-                </h3>
-                <p class="text-sm text-gray-600 mb-3">Record devices and parts used for this installation</p>
+              <div v-if="device.installationComplete" class="border-t border-gray-200 pt-4 mt-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 class="text-md font-medium flex items-center">
+                      <span>Equipment Tracking</span>
+                      <span v-if="device.inventoryItems && device.inventoryItems.length > 0" class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs">
+                        {{ device.inventoryItems.length }} item{{ device.inventoryItems.length !== 1 ? 's' : '' }}
+                      </span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">Optional: Track equipment used</p>
+                  </div>
+                  <button
+                    @click="toggleInventoryForm(device.deviceNumber)"
+                    class="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                  >
+                    {{ showInventoryForm[device.deviceNumber] ? 'Hide' : '+ Add Equipment' }}
+                  </button>
+                </div>
 
                 <!-- Existing Inventory Items -->
                 <div v-if="device.inventoryItems && device.inventoryItems.length > 0" class="mb-3 space-y-2">
                   <div
                     v-for="item in device.inventoryItems"
                     :key="item.id"
-                    class="p-3 bg-gray-50 rounded border border-gray-200"
+                    class="p-2 bg-purple-50 rounded border border-purple-200 text-sm"
                   >
                     <div class="flex justify-between items-start">
                       <div>
-                        <p class="font-medium text-sm">{{ item.deviceType }} {{ item.model ? `- ${item.model}` : '' }}</p>
-                        <p class="text-xs text-gray-600">Serial: {{ item.serialNumber }}</p>
+                        <p class="font-medium">{{ item.deviceType }}{{ item.model ? ` - ${item.model}` : '' }}</p>
+                        <p class="text-xs text-gray-600">SN: {{ item.serialNumber }}</p>
                         <p v-if="item.notes" class="text-xs text-gray-500 mt-1">{{ item.notes }}</p>
                       </div>
-                      <span class="text-xs text-green-600 font-medium">Added</span>
+                      <span class="text-xs text-green-600 font-medium">✓</span>
                     </div>
                   </div>
                 </div>
 
-                <div v-else class="mb-3 text-sm text-gray-500 italic">
-                  No equipment tracked yet
-                </div>
-
-                <!-- Add Inventory Item Form -->
-                <div class="border border-gray-300 rounded p-3 bg-gray-50 space-y-2">
+                <!-- Add Inventory Item Form (Collapsible) -->
+                <div v-if="showInventoryForm[device.deviceNumber]" class="border border-gray-300 rounded p-3 bg-gray-50 space-y-2 animate-fadeIn">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label class="block text-xs font-medium text-gray-700 mb-1">Device Type *</label>
@@ -282,6 +291,7 @@ interface InventoryFormData {
 }
 
 const inventoryForm = ref<Record<number, InventoryFormData>>({})
+const showInventoryForm = ref<Record<number, boolean>>({})
 
 const currentJob = computed(() => jobsStore.currentJob)
 const installation = computed(() => installationsStore.currentInstallation)
@@ -395,6 +405,13 @@ function initializeInventoryForm(deviceNumber: number) {
       notes: ''
     }
   }
+  if (showInventoryForm.value[deviceNumber] === undefined) {
+    showInventoryForm.value[deviceNumber] = false
+  }
+}
+
+function toggleInventoryForm(deviceNumber: number) {
+  showInventoryForm.value[deviceNumber] = !showInventoryForm.value[deviceNumber]
 }
 
 async function addInventory(deviceNumber: number) {
@@ -423,6 +440,8 @@ async function addInventory(deviceNumber: number) {
       serialNumber: '',
       notes: ''
     }
+    // Hide form after successful add
+    showInventoryForm.value[deviceNumber] = false
   } else {
     toast.error(installationsStore.error || 'Failed to add inventory item')
   }

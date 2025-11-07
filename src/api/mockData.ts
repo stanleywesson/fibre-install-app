@@ -223,6 +223,8 @@ export const mockJobs: Job[] = [
     assignedInstallerId: 4,
     supervisorId: 2,
     deviceCount: 1,
+    customerOtp: '5555',
+    otpVerified: false,
     createdAt: new Date('2025-01-08')
   },
   {
@@ -285,6 +287,8 @@ export const mockJobs: Job[] = [
     scheduledDate: new Date('2025-01-16'),
     notes: 'Customer unavailable at scheduled time',
     deviceCount: 1,
+    customerOtp: '7777',
+    otpVerified: false,
     createdAt: new Date('2025-01-10')
   },
   // Company 2 - ConnectNet Services
