@@ -139,7 +139,7 @@
                       <label class="block text-xs font-medium text-gray-700 mb-1">Device Type *</label>
                       <select
                         v-model="inventoryForm[device.deviceNumber].deviceType"
-                        class="w-full text-sm rounded-md border-gray-300"
+                        class="w-full text-sm rounded-md border-gray-300 px-3 py-2"
                       >
                         <option value="">Select type</option>
                         <option value="Router">Router</option>
@@ -157,7 +157,7 @@
                         v-model="inventoryForm[device.deviceNumber].model"
                         type="text"
                         placeholder="e.g., TP-Link AX3000"
-                        class="w-full text-sm rounded-md border-gray-300"
+                        class="w-full text-sm rounded-md border-gray-300 px-3 py-2"
                       />
                     </div>
                   </div>
@@ -167,7 +167,7 @@
                       v-model="inventoryForm[device.deviceNumber].serialNumber"
                       type="text"
                       placeholder="Enter serial number"
-                      class="w-full text-sm rounded-md border-gray-300"
+                      class="w-full text-sm rounded-md border-gray-300 px-3 py-2"
                     />
                   </div>
                   <div>
@@ -176,7 +176,7 @@
                       v-model="inventoryForm[device.deviceNumber].notes"
                       type="text"
                       placeholder="Any additional notes"
-                      class="w-full text-sm rounded-md border-gray-300"
+                      class="w-full text-sm rounded-md border-gray-300 px-3 py-2"
                     />
                   </div>
                   <button
