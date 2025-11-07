@@ -476,6 +476,40 @@ export async function verifyJobOtp(jobId: number, enteredOtp: string): Promise<A
   }
 }
 
+export async function markJobEnroute(jobId: number): Promise<ApiResponse<Job>> {
+  await delay()
+
+  const jobIndex = mockJobs.findIndex(j => j.id === jobId)
+
+  if (jobIndex === -1) {
+    return {
+      success: false,
+      message: 'Job not found'
+    }
+  }
+
+  const job = mockJobs[jobIndex]
+
+  if (job.enrouteAt) {
+    return {
+      success: true,
+      data: job,
+      message: 'Already marked as enroute'
+    }
+  }
+
+  mockJobs[jobIndex] = {
+    ...mockJobs[jobIndex],
+    enrouteAt: new Date()
+  }
+
+  return {
+    success: true,
+    data: mockJobs[jobIndex],
+    message: 'Marked as enroute successfully'
+  }
+}
+
 // ==================== INSTALLATION API ====================
 
 export async function getInstallations(): Promise<ApiResponse<Installation[]>> {

@@ -11,7 +11,8 @@ import {
   scheduleJob,
   resolveHoldOver,
   setJobHoldOver,
-  verifyJobOtp
+  verifyJobOtp,
+  markJobEnroute
 } from '@/api/mockApi'
 
 export const useJobsStore = defineStore('jobs', () => {
@@ -309,6 +310,35 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function markEnroute(jobId: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await markJobEnroute(jobId)
+
+      if (response.success && response.data) {
+        const index = jobs.value.findIndex(j => j.id === jobId)
+        if (index !== -1) {
+          jobs.value[index] = response.data
+        }
+        if (currentJob.value?.id === jobId) {
+          currentJob.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to mark job as enroute'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while marking job as enroute'
+      console.error('Mark enroute error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   function clearError() {
     error.value = null
   }
@@ -339,6 +369,7 @@ export const useJobsStore = defineStore('jobs', () => {
     resolveJobHoldOver,
     setJobToHoldOver,
     verifyOtp,
+    markEnroute,
     getJobsByStatus,
     getJobsByDateRange,
     clearError

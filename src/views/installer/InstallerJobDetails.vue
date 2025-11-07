@@ -45,6 +45,12 @@
                 <span v-else class="text-orange-600">⚠ Requires OTP</span>
               </p>
             </div>
+            <div v-if="currentJob.enrouteAt">
+              <p class="text-sm text-gray-500">Enroute Status</p>
+              <p class="font-medium text-green-600">
+                ✓ On the way ({{ new Date(currentJob.enrouteAt).toLocaleTimeString() }})
+              </p>
+            </div>
           </div>
 
           <!-- Quick Actions: Call & Navigate -->
@@ -117,16 +123,29 @@
         <!-- Actions -->
         <div class="bg-white shadow sm:rounded-lg p-6 mb-6">
           <h2 class="text-lg font-medium mb-4">Actions</h2>
-          <div class="flex gap-4">
-            <RouterLink v-if="currentJob?.status === 'Assigned' || (currentJob?.status === 'Scheduled' && !currentJob.scheduledDate)" :to="`/installer/jobs/${currentJob.id}/schedule`" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <RouterLink v-if="currentJob?.status === 'Assigned' || (currentJob?.status === 'Scheduled' && !currentJob.scheduledDate)" :to="`/installer/jobs/${currentJob.id}/schedule`" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-center">
               Schedule Appointment
             </RouterLink>
+
+            <button
+              v-if="currentJob?.status === 'Scheduled' && !currentJob.enrouteAt"
+              @click="handleMarkEnroute"
+              :disabled="markingEnroute"
+              class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <svg v-if="!markingEnroute" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>{{ markingEnroute ? 'Updating...' : "I'm on my way" }}</span>
+            </button>
+
             <RouterLink
               v-if="currentJob?.status === 'Scheduled' || currentJob?.status === 'Installation in Progress'"
               :to="canStartInstallation ? `/installer/jobs/${currentJob.id}/install` : '#'"
               @click="checkOtpBeforeInstall"
               :class="[
-                'px-4 py-2 rounded-md',
+                'px-4 py-2 rounded-md text-center',
                 canStartInstallation
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -158,6 +177,7 @@ const otpInput = ref('')
 const verifyingOtp = ref(false)
 const otpError = ref('')
 const otpSuccess = ref('')
+const markingEnroute = ref(false)
 
 const currentJob = computed(() => jobsStore.currentJob)
 const customer = computed(() => currentJob.value ? customersStore.getCustomerById_sync(currentJob.value.customerId) : null)
@@ -214,6 +234,20 @@ function checkOtpBeforeInstall(event: Event) {
     event.preventDefault()
     otpError.value = 'Please verify the customer OTP before starting installation.'
   }
+}
+
+async function handleMarkEnroute() {
+  if (!currentJob.value) return
+
+  markingEnroute.value = true
+
+  const result = await jobsStore.markEnroute(currentJob.value.id)
+
+  if (result) {
+    // Success - the UI will automatically update via the reactive currentJob
+  }
+
+  markingEnroute.value = false
 }
 
 onMounted(async () => {
