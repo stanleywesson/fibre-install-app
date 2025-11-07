@@ -33,12 +33,38 @@
           </div>
         </div>
 
-        <!-- Jobs Table -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <!-- Mobile Card View -->
+        <div class="sm:hidden space-y-4">
+          <div v-for="job in filteredJobs" :key="job.id" class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1">
+                <div class="text-sm text-gray-500 mb-1">Job #{{ job.id }}</div>
+                <h3 class="text-lg font-medium text-gray-900">
+                  {{ customersStore.getCustomerById_sync(job.customerId)?.name || '-' }}
+                </h3>
+              </div>
+              <span :class="getStatusClass(job.status)" class="px-2 py-1 text-xs leading-5 font-semibold rounded-full whitespace-nowrap ml-2">
+                {{ job.status }}
+              </span>
+            </div>
+
+            <div v-if="job.scheduledDate" class="text-sm text-gray-600 mb-3">
+              <span class="font-medium">Scheduled:</span> {{ new Date(job.scheduledDate).toLocaleDateString() }}
+            </div>
+
+            <RouterLink :to="`/installer/jobs/${job.id}`"
+              class="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+              View Details
+            </RouterLink>
+          </div>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden sm:block bg-white shadow overflow-hidden sm:rounded-lg">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheduled</th>
@@ -47,7 +73,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="job in filteredJobs" :key="job.id">
-                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ job.id }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ job.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {{ customersStore.getCustomerById_sync(job.customerId)?.name || '-' }}
                 </td>
