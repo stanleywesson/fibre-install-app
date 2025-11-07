@@ -5,6 +5,7 @@ import type {
   Job,
   JobComment,
   Installation,
+  InventoryItem,
   LoginCredentials,
   LoginResponse,
   ApiResponse
@@ -892,5 +893,111 @@ export async function activateInstallation(
   return {
     success: true,
     data: installation
+  }
+}
+
+// ==================== INVENTORY API ====================
+
+let nextInventoryId = 1
+
+export async function addInventoryItem(
+  installationId: number,
+  deviceNumber: number,
+  serialNumber: string,
+  deviceType: string,
+  model: string | undefined,
+  installerId: number,
+  jobId: number,
+  notes?: string
+): Promise<ApiResponse<Installation>> {
+  await delay()
+
+  const installationIndex = mockInstallations.findIndex(i => i.id === installationId)
+
+  if (installationIndex === -1) {
+    return {
+      success: false,
+      message: 'Installation not found'
+    }
+  }
+
+  const installation = mockInstallations[installationIndex]
+  const device = installation.devices.find(d => d.deviceNumber === deviceNumber)
+
+  if (!device) {
+    return {
+      success: false,
+      message: 'Device not found'
+    }
+  }
+
+  const newInventoryItem: InventoryItem = {
+    id: nextInventoryId++,
+    serialNumber,
+    deviceType,
+    model,
+    installationId,
+    jobId,
+    installerId,
+    usedAt: new Date(),
+    notes,
+    createdAt: new Date()
+  }
+
+  if (!device.inventoryItems) {
+    device.inventoryItems = []
+  }
+
+  device.inventoryItems.push(newInventoryItem)
+
+  return {
+    success: true,
+    data: installation
+  }
+}
+
+export async function getInventoryItemsByJob(jobId: number): Promise<ApiResponse<InventoryItem[]>> {
+  await delay()
+
+  const jobInstallations = mockInstallations.filter(i => i.jobId === jobId)
+  const inventoryItems: InventoryItem[] = []
+
+  jobInstallations.forEach(installation => {
+    installation.devices.forEach(device => {
+      if (device.inventoryItems) {
+        inventoryItems.push(...device.inventoryItems)
+      }
+    })
+  })
+
+  return {
+    success: true,
+    data: inventoryItems
+  }
+}
+
+export async function getInventoryItemsByInstallation(installationId: number): Promise<ApiResponse<InventoryItem[]>> {
+  await delay()
+
+  const installation = mockInstallations.find(i => i.id === installationId)
+
+  if (!installation) {
+    return {
+      success: false,
+      message: 'Installation not found'
+    }
+  }
+
+  const inventoryItems: InventoryItem[] = []
+
+  installation.devices.forEach(device => {
+    if (device.inventoryItems) {
+      inventoryItems.push(...device.inventoryItems)
+    }
+  })
+
+  return {
+    success: true,
+    data: inventoryItems
   }
 }

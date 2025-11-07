@@ -11,7 +11,8 @@ import {
   addDeviceSerialPhoto,
   completeDeviceInstallation,
   completeDeviceSerial,
-  activateInstallation
+  activateInstallation,
+  addInventoryItem
 } from '@/api/mockApi'
 
 export const useInstallationsStore = defineStore('installations', () => {
@@ -295,6 +296,53 @@ export const useInstallationsStore = defineStore('installations', () => {
     }
   }
 
+  async function addInventory(
+    installationId: number,
+    deviceNumber: number,
+    serialNumber: string,
+    deviceType: string,
+    model: string | undefined,
+    installerId: number,
+    jobId: number,
+    notes?: string
+  ) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await addInventoryItem(
+        installationId,
+        deviceNumber,
+        serialNumber,
+        deviceType,
+        model,
+        installerId,
+        jobId,
+        notes
+      )
+
+      if (response.success && response.data) {
+        const index = installations.value.findIndex(i => i.id === installationId)
+        if (index !== -1) {
+          installations.value = installations.value.map(i => i.id === installationId ? response.data! : i)
+        }
+        if (currentInstallation.value?.id === installationId) {
+          currentInstallation.value = response.data
+        }
+        return response.data
+      } else {
+        error.value = response.message || 'Failed to add inventory item'
+        return null
+      }
+    } catch (err) {
+      error.value = 'An error occurred while adding inventory item'
+      console.error('Add inventory error:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   function clearError() {
     error.value = null
   }
@@ -316,6 +364,7 @@ export const useInstallationsStore = defineStore('installations', () => {
     completeInstall,
     completeSerial,
     activate,
+    addInventory,
     clearError
   }
 })

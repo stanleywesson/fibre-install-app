@@ -103,6 +103,92 @@
                 </div>
               </div>
 
+              <!-- Inventory Tracking -->
+              <div v-if="device.installationComplete">
+                <h3 class="text-md font-medium mb-2 flex items-center">
+                  <span>Track Equipment Used</span>
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Record devices and parts used for this installation</p>
+
+                <!-- Existing Inventory Items -->
+                <div v-if="device.inventoryItems && device.inventoryItems.length > 0" class="mb-3 space-y-2">
+                  <div
+                    v-for="item in device.inventoryItems"
+                    :key="item.id"
+                    class="p-3 bg-gray-50 rounded border border-gray-200"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <p class="font-medium text-sm">{{ item.deviceType }} {{ item.model ? `- ${item.model}` : '' }}</p>
+                        <p class="text-xs text-gray-600">Serial: {{ item.serialNumber }}</p>
+                        <p v-if="item.notes" class="text-xs text-gray-500 mt-1">{{ item.notes }}</p>
+                      </div>
+                      <span class="text-xs text-green-600 font-medium">Added</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="mb-3 text-sm text-gray-500 italic">
+                  No equipment tracked yet
+                </div>
+
+                <!-- Add Inventory Item Form -->
+                <div class="border border-gray-300 rounded p-3 bg-gray-50 space-y-2">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Device Type *</label>
+                      <select
+                        v-model="inventoryForm[device.deviceNumber]?.deviceType"
+                        class="w-full text-sm rounded-md border-gray-300"
+                      >
+                        <option value="">Select type</option>
+                        <option value="Router">Router</option>
+                        <option value="ONT">ONT (Optical Network Terminal)</option>
+                        <option value="Cable">Cable</option>
+                        <option value="Splitter">Splitter</option>
+                        <option value="Power Supply">Power Supply</option>
+                        <option value="Mounting Bracket">Mounting Bracket</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Model</label>
+                      <input
+                        v-model="inventoryForm[device.deviceNumber]?.model"
+                        type="text"
+                        placeholder="e.g., TP-Link AX3000"
+                        class="w-full text-sm rounded-md border-gray-300"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Serial Number *</label>
+                    <input
+                      v-model="inventoryForm[device.deviceNumber]?.serialNumber"
+                      type="text"
+                      placeholder="Enter serial number"
+                      class="w-full text-sm rounded-md border-gray-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Notes (optional)</label>
+                    <input
+                      v-model="inventoryForm[device.deviceNumber]?.notes"
+                      type="text"
+                      placeholder="Any additional notes"
+                      class="w-full text-sm rounded-md border-gray-300"
+                    />
+                  </div>
+                  <button
+                    @click="addInventory(device.deviceNumber)"
+                    :disabled="!canAddInventory(device.deviceNumber)"
+                    class="w-full px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 text-sm"
+                  >
+                    Add Equipment
+                  </button>
+                </div>
+              </div>
+
               <!-- Serial Step -->
               <div>
                 <h3 class="text-md font-medium mb-2 flex items-center">
@@ -187,6 +273,15 @@ const toast = useToast()
 
 const holdOverNotes = ref('')
 const expandedDevices = ref(new Set<number>())
+
+interface InventoryFormData {
+  deviceType: string
+  model: string
+  serialNumber: string
+  notes: string
+}
+
+const inventoryForm = ref<Record<number, InventoryFormData>>({})
 
 const currentJob = computed(() => jobsStore.currentJob)
 const installation = computed(() => installationsStore.currentInstallation)
@@ -285,6 +380,54 @@ async function flagHoldOver() {
   }
 }
 
+function canAddInventory(deviceNumber: number): boolean {
+  const form = inventoryForm.value[deviceNumber]
+  if (!form) return false
+  return !!(form.deviceType && form.serialNumber && form.serialNumber.trim())
+}
+
+function initializeInventoryForm(deviceNumber: number) {
+  if (!inventoryForm.value[deviceNumber]) {
+    inventoryForm.value[deviceNumber] = {
+      deviceType: '',
+      model: '',
+      serialNumber: '',
+      notes: ''
+    }
+  }
+}
+
+async function addInventory(deviceNumber: number) {
+  if (!installation.value || !currentJob.value || !authStore.user) return
+
+  const form = inventoryForm.value[deviceNumber]
+  if (!form || !canAddInventory(deviceNumber)) return
+
+  const result = await installationsStore.addInventory(
+    installation.value.id,
+    deviceNumber,
+    form.serialNumber.trim(),
+    form.deviceType,
+    form.model.trim() || undefined,
+    authStore.user.id,
+    currentJob.value.id,
+    form.notes.trim() || undefined
+  )
+
+  if (result) {
+    toast.success('Equipment added to inventory!')
+    // Reset form
+    inventoryForm.value[deviceNumber] = {
+      deviceType: '',
+      model: '',
+      serialNumber: '',
+      notes: ''
+    }
+  } else {
+    toast.error(installationsStore.error || 'Failed to add inventory item')
+  }
+}
+
 onMounted(async () => {
   const jobId = parseInt(route.params.id as string)
   await jobsStore.fetchJobById(jobId)
@@ -295,7 +438,7 @@ onMounted(async () => {
     await installationsStore.startInstallation(jobId, authStore.user.id)
   }
 
-  // Expand first incomplete device
+  // Expand first incomplete device and initialize inventory forms
   if (installation.value) {
     const firstIncomplete = installation.value.devices.find(d => !d.installationComplete || !d.serialComplete)
     if (firstIncomplete) {
@@ -304,6 +447,11 @@ onMounted(async () => {
       // All complete, expand first device
       expandedDevices.value.add(1)
     }
+
+    // Initialize inventory forms for all devices
+    installation.value.devices.forEach(device => {
+      initializeInventoryForm(device.deviceNumber)
+    })
   }
 })
 </script>

@@ -69,6 +69,20 @@ export interface Job {
   createdAt: Date
 }
 
+// Inventory types
+export interface InventoryItem {
+  id: number
+  serialNumber: string
+  deviceType: string // e.g., "Router", "ONT", "Cable"
+  model?: string
+  installationId?: number // Which installation this was used for
+  jobId?: number // Which job this was used for
+  installerId?: number // Who used this device
+  usedAt?: Date // When it was used
+  notes?: string
+  createdAt: Date
+}
+
 // Installation types
 export interface Device {
   deviceNumber: number // 1, 2, 3, etc.
@@ -78,6 +92,7 @@ export interface Device {
   serialComplete: boolean
   serialPhotos: string[] // Photos of serial number
   serialCompletedAt?: Date
+  inventoryItems?: InventoryItem[] // Devices/parts used for this device installation
 }
 
 export interface Installation {
