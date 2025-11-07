@@ -1,0 +1,83 @@
+Run npm run build
+
+> fibreinstalls@0.0.1 build
+> vue-tsc && vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 43 modules transformed.
+warnings
+
+PWA v0.21.2
+mode      generateSW
+  One of the glob patterns doesn't match any files. Please remove or fix the following: {
+  "globDirectory": "/home/runner/work/fibre-install-app/fibre-install-app/dist",
+  "globPattern": "**/*.{js,wasm,css,html}",
+  "globIgnores": [
+    "**/node_modules/**/*",
+    "sw.js",
+    "workbox-*.js"
+  ]
+}
+
+precache  1 entries (0.00 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-5ffe50d4.js
+✗ Build failed in 2.52s
+error during build:
+[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts (474:80): There was an error during the build:
+  Transform failed with 4 errors:
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:474:80: ERROR: Invalid assignment target
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:485:80: ERROR: Invalid assignment target
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:497:78: ERROR: Invalid assignment target
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:508:78: ERROR: Invalid assignment target
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  Transform failed with 4 errors:
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:474:80: ERROR: Invalid assignment target
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:485:80: ERROR: Invalid assignment target
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:497:78: ERROR: Invalid assignment target
+/home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:508:78: ERROR: Invalid assignment target
+file: /home/runner/work/fibre-install-app/fibre-install-app/src/views/installer/InstallerInstallation.vue?vue&type=script&setup=true&lang.ts:474:80
+
+Invalid assignment target
+472|                                      _cache[14] || (_cache[14] = _createElementVNode("label", { class: "block text-xs font-medium text-gray-700 mb-1" }, "Device Type *", -1)),
+473|                                      _withDirectives(_createElementVNode("select", {
+474|                                        "onUpdate:modelValue": ($event: any) => ((inventoryForm.value[device.deviceNumber]?.deviceType) = $event),
+   |                                                                                  ^
+475|                                        class: "w-full text-sm rounded-md border-gray-300"
+476|                                      }, [...(_cache[13] || (_cache[13] = [
+
+Invalid assignment target
+483|                                      _cache[15] || (_cache[15] = _createElementVNode("label", { class: "block text-xs font-medium text-gray-700 mb-1" }, "Model", -1)),
+484|                                      _withDirectives(_createElementVNode("input", {
+485|                                        "onUpdate:modelValue": ($event: any) => ((inventoryForm.value[device.deviceNumber]?.model) = $event),
+   |                                                                                  ^
+486|                                        type: "text",
+487|                                        placeholder: "e.g., TP-Link AX3000",
+
+Invalid assignment target
+495|                                    _cache[16] || (_cache[16] = _createElementVNode("label", { class: "block text-xs font-medium text-gray-700 mb-1" }, "Serial Number *", -1)),
+496|                                    _withDirectives(_createElementVNode("input", {
+497|                                      "onUpdate:modelValue": ($event: any) => ((inventoryForm.value[device.deviceNumber]?.serialNumber) = $event),
+   |                                                                                ^
+498|                                      type: "text",
+499|                                      placeholder: "Enter serial number",
+
+Invalid assignment target
+506|                                    _cache[17] || (_cache[17] = _createElementVNode("label", { class: "block text-xs font-medium text-gray-700 mb-1" }, "Notes (optional)", -1)),
+507|                                    _withDirectives(_createElementVNode("input", {
+508|                                      "onUpdate:modelValue": ($event: any) => ((inventoryForm.value[device.deviceNumber]?.notes) = $event),
+   |                                                                                ^
+509|                                      type: "text",
+510|                                      placeholder: "Any additional notes",
+
+    at getRollupError (file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/rollup/dist/es/shared/node-entry.js:23322:39
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async catchUnfinishedHookActions (file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/rollup/dist/es/shared/node-entry.js:22780:16)
+    at async rollupInternal (file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/rollup/dist/es/shared/node-entry.js:23305:5)
+    at async buildEnvironment (file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46235:14)
+    at async Object.defaultBuildApp [as buildApp] (file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46713:5)
+    at async CAC.<anonymous> (file:///home/runner/work/fibre-install-app/fibre-install-app/node_modules/vite/dist/node/cli.js:863:7)
+Error: Process completed with exit code 1.

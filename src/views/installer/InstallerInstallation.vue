@@ -138,7 +138,7 @@
                     <div>
                       <label class="block text-xs font-medium text-gray-700 mb-1">Device Type *</label>
                       <select
-                        v-model="inventoryForm[device.deviceNumber]?.deviceType"
+                        v-model="inventoryForm[device.deviceNumber].deviceType"
                         class="w-full text-sm rounded-md border-gray-300"
                       >
                         <option value="">Select type</option>
@@ -154,7 +154,7 @@
                     <div>
                       <label class="block text-xs font-medium text-gray-700 mb-1">Model</label>
                       <input
-                        v-model="inventoryForm[device.deviceNumber]?.model"
+                        v-model="inventoryForm[device.deviceNumber].model"
                         type="text"
                         placeholder="e.g., TP-Link AX3000"
                         class="w-full text-sm rounded-md border-gray-300"
@@ -164,7 +164,7 @@
                   <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Serial Number *</label>
                     <input
-                      v-model="inventoryForm[device.deviceNumber]?.serialNumber"
+                      v-model="inventoryForm[device.deviceNumber].serialNumber"
                       type="text"
                       placeholder="Enter serial number"
                       class="w-full text-sm rounded-md border-gray-300"
@@ -173,7 +173,7 @@
                   <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Notes (optional)</label>
                     <input
-                      v-model="inventoryForm[device.deviceNumber]?.notes"
+                      v-model="inventoryForm[device.deviceNumber].notes"
                       type="text"
                       placeholder="Any additional notes"
                       class="w-full text-sm rounded-md border-gray-300"
