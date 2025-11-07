@@ -46,6 +46,33 @@
               </p>
             </div>
           </div>
+
+          <!-- Quick Actions: Call & Navigate -->
+          <div v-if="customer" class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Quick Actions</h3>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <a
+                :href="`tel:${customer.phone}`"
+                class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span class="font-medium">Call Customer</span>
+              </a>
+              <a
+                :href="getDirectionsUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                <span class="font-medium">Get Directions</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         <!-- OTP Verification (for scheduled jobs) -->
@@ -139,6 +166,12 @@ const canStartInstallation = computed(() => {
   if (!currentJob.value) return false
   if (!currentJob.value.customerOtp) return true
   return currentJob.value.otpVerified === true
+})
+
+const getDirectionsUrl = computed(() => {
+  if (!customer.value?.address) return '#'
+  const encodedAddress = encodeURIComponent(customer.value.address)
+  return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
 })
 
 function getStatusClass(status: JobStatus) {
