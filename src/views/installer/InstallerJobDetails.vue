@@ -224,7 +224,9 @@ import { useCustomersStore } from '@/stores/customers'
 import { useInstallationsStore } from '@/stores/installations'
 import { useAuthStore } from '@/stores/auth'
 import type { JobStatus } from '@/types'
+import { useToast } from 'vue-toastification'
 
+const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const jobsStore = useJobsStore()
@@ -329,6 +331,8 @@ async function handleMarkEnroute() {
 
   if (result) {
     // Success - the UI will automatically update via the reactive currentJob
+    const customerName = customer.value?.name || 'customer'
+    toast.success(`📱 SMS notification sent to ${customerName}! You're on your way.`)
   }
 
   markingEnroute.value = false
