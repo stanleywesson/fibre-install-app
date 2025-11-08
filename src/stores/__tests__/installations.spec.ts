@@ -381,4 +381,288 @@ describe('Installations Store', () => {
       expect(store.error).toBeNull()
     })
   })
+
+  describe('addInventory', () => {
+    it('should add inventory item successfully', async () => {
+      const store = useInstallationsStore()
+      const inventoryInstallation = {
+        ...mockInstallation,
+        devices: [
+          {
+            ...mockInstallation.devices[0],
+            inventoryItems: [
+              {
+                id: 1,
+                deviceNumber: 1,
+                serialNumber: 'SN123456',
+                deviceType: 'Router',
+                model: 'TP-Link AX3000',
+                installerId: 5,
+                jobId: 4,
+                notes: 'Main router',
+                createdAt: new Date('2025-01-16T10:00:00')
+              }
+            ]
+          },
+          mockInstallation.devices[1]
+        ]
+      }
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: true,
+        data: inventoryInstallation
+      })
+
+      const result = await store.addInventory(1, 1, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4, 'Main router')
+
+      expect(result).toBeDefined()
+      expect(mockApi.addInventoryItem).toHaveBeenCalledWith(1, 1, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4, 'Main router')
+    })
+
+    it('should handle add inventory error', async () => {
+      const store = useInstallationsStore()
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: false,
+        message: 'Failed to add inventory item'
+      })
+
+      const result = await store.addInventory(1, 1, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Failed to add inventory item')
+    })
+
+    it('should update current installation when inventory added', async () => {
+      const store = useInstallationsStore()
+      store.currentInstallation = mockInstallation
+
+      const inventoryInstallation = {
+        ...mockInstallation,
+        devices: [
+          {
+            ...mockInstallation.devices[0],
+            inventoryItems: [
+              {
+                id: 1,
+                deviceNumber: 1,
+                serialNumber: 'SN123456',
+                deviceType: 'Router',
+                model: 'TP-Link AX3000',
+                installerId: 5,
+                jobId: 4,
+                createdAt: new Date()
+              }
+            ]
+          },
+          mockInstallation.devices[1]
+        ]
+      }
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: true,
+        data: inventoryInstallation
+      })
+
+      await store.addInventory(1, 1, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4)
+
+      expect(store.currentInstallation?.devices[0].inventoryItems).toHaveLength(1)
+    })
+
+    it('should update installations array when inventory added', async () => {
+      const store = useInstallationsStore()
+      store.installations = [mockInstallation]
+
+      const inventoryInstallation = {
+        ...mockInstallation,
+        devices: [
+          {
+            ...mockInstallation.devices[0],
+            inventoryItems: [
+              {
+                id: 1,
+                deviceNumber: 1,
+                serialNumber: 'SN123456',
+                deviceType: 'Router',
+                model: undefined,
+                installerId: 5,
+                jobId: 4,
+                createdAt: new Date()
+              }
+            ]
+          },
+          mockInstallation.devices[1]
+        ]
+      }
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: true,
+        data: inventoryInstallation
+      })
+
+      await store.addInventory(1, 1, 'SN123456', 'Router', undefined, 5, 4)
+
+      const updatedInstallation = store.installations.find(i => i.id === 1)
+      expect(updatedInstallation?.devices[0].inventoryItems).toHaveLength(1)
+    })
+
+    it('should handle missing required fields', async () => {
+      const store = useInstallationsStore()
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: false,
+        message: 'Serial number and device type are required'
+      })
+
+      const result = await store.addInventory(1, 1, '', 'Router', 'TP-Link AX3000', 5, 4)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Serial number and device type are required')
+    })
+
+    it('should handle device not found', async () => {
+      const store = useInstallationsStore()
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: false,
+        message: 'Device not found'
+      })
+
+      const result = await store.addInventory(1, 999, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Device not found')
+    })
+
+    it('should handle installation not complete', async () => {
+      const store = useInstallationsStore()
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: false,
+        message: 'Device installation must be complete before adding inventory'
+      })
+
+      const result = await store.addInventory(1, 2, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Device installation must be complete before adding inventory')
+    })
+
+    it('should add inventory without optional fields', async () => {
+      const store = useInstallationsStore()
+      const inventoryInstallation = {
+        ...mockInstallation,
+        devices: [
+          {
+            ...mockInstallation.devices[0],
+            inventoryItems: [
+              {
+                id: 1,
+                deviceNumber: 1,
+                serialNumber: 'SN123456',
+                deviceType: 'Other',
+                model: undefined,
+                notes: undefined,
+                installerId: 5,
+                jobId: 4,
+                createdAt: new Date()
+              }
+            ]
+          },
+          mockInstallation.devices[1]
+        ]
+      }
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValue({
+        success: true,
+        data: inventoryInstallation
+      })
+
+      const result = await store.addInventory(1, 1, 'SN123456', 'Other', undefined, 5, 4, undefined)
+
+      expect(result).toBeDefined()
+      expect(result?.devices[0].inventoryItems?.[0].model).toBeUndefined()
+      expect(result?.devices[0].inventoryItems?.[0].notes).toBeUndefined()
+    })
+
+    it('should handle network errors gracefully', async () => {
+      const store = useInstallationsStore()
+
+      vi.mocked(mockApi.addInventoryItem).mockRejectedValue(new Error('Network error'))
+
+      const result = await store.addInventory(1, 1, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('An error occurred while adding inventory item')
+    })
+
+    it('should add multiple inventory items to same device', async () => {
+      const store = useInstallationsStore()
+      store.currentInstallation = mockInstallation
+
+      // First item
+      const firstItemInstallation = {
+        ...mockInstallation,
+        devices: [
+          {
+            ...mockInstallation.devices[0],
+            inventoryItems: [
+              {
+                id: 1,
+                deviceNumber: 1,
+                serialNumber: 'SN123456',
+                deviceType: 'Router',
+                model: 'TP-Link AX3000',
+                installerId: 5,
+                jobId: 4,
+                createdAt: new Date()
+              }
+            ]
+          },
+          mockInstallation.devices[1]
+        ]
+      }
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValueOnce({
+        success: true,
+        data: firstItemInstallation
+      })
+
+      await store.addInventory(1, 1, 'SN123456', 'Router', 'TP-Link AX3000', 5, 4)
+
+      // Second item
+      const secondItemInstallation = {
+        ...firstItemInstallation,
+        devices: [
+          {
+            ...firstItemInstallation.devices[0],
+            inventoryItems: [
+              ...(firstItemInstallation.devices[0].inventoryItems || []),
+              {
+                id: 2,
+                deviceNumber: 1,
+                serialNumber: 'SN789012',
+                deviceType: 'Cable',
+                model: 'Cat6 Ethernet',
+                installerId: 5,
+                jobId: 4,
+                notes: '10m cable',
+                createdAt: new Date()
+              }
+            ]
+          },
+          firstItemInstallation.devices[1]
+        ]
+      }
+
+      vi.mocked(mockApi.addInventoryItem).mockResolvedValueOnce({
+        success: true,
+        data: secondItemInstallation
+      })
+
+      await store.addInventory(1, 1, 'SN789012', 'Cable', 'Cat6 Ethernet', 5, 4, '10m cable')
+
+      expect(store.currentInstallation?.devices[0].inventoryItems).toHaveLength(2)
+    })
+  })
 })

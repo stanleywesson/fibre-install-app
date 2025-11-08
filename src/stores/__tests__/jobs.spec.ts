@@ -266,4 +266,257 @@ describe('Jobs Store', () => {
       expect(store.error).toBe('An error occurred while fetching jobs')
     })
   })
+
+  describe('addComment', () => {
+    it('should add comment to job successfully', async () => {
+      const store = useJobsStore()
+      store.jobs = [mockJob]
+      store.currentJob = mockJob
+
+      const commentedJob = {
+        ...mockJob,
+        comments: [
+          {
+            id: 1,
+            userId: 4,
+            userName: 'Bob Williams',
+            comment: 'Customer requested afternoon installation',
+            createdAt: new Date('2025-01-16T14:30:00')
+          }
+        ]
+      }
+
+      vi.mocked(mockApi.addJobComment).mockResolvedValue({
+        success: true,
+        data: commentedJob
+      })
+
+      const result = await store.addComment(1, 4, 'Bob Williams', 'Customer requested afternoon installation')
+
+      expect(result).toEqual(commentedJob)
+      expect(mockApi.addJobComment).toHaveBeenCalledWith(1, 4, 'Bob Williams', 'Customer requested afternoon installation')
+      expect(store.currentJob?.comments).toHaveLength(1)
+    })
+
+    it('should handle add comment error', async () => {
+      const store = useJobsStore()
+
+      vi.mocked(mockApi.addJobComment).mockResolvedValue({
+        success: false,
+        message: 'Failed to add comment'
+      })
+
+      const result = await store.addComment(1, 4, 'Bob Williams', 'Test comment')
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Failed to add comment')
+    })
+
+    it('should update jobs array when comment added to existing job', async () => {
+      const store = useJobsStore()
+      const existingJob = { ...mockJob, id: 5 }
+      store.jobs = [mockJob, existingJob]
+
+      const commentedJob = {
+        ...existingJob,
+        comments: [
+          {
+            id: 1,
+            userId: 4,
+            userName: 'Bob Williams',
+            comment: 'Test comment',
+            createdAt: new Date()
+          }
+        ]
+      }
+
+      vi.mocked(mockApi.addJobComment).mockResolvedValue({
+        success: true,
+        data: commentedJob
+      })
+
+      await store.addComment(5, 4, 'Bob Williams', 'Test comment')
+
+      const updatedJob = store.jobs.find(j => j.id === 5)
+      expect(updatedJob?.comments).toHaveLength(1)
+    })
+
+    it('should handle empty comment', async () => {
+      const store = useJobsStore()
+
+      vi.mocked(mockApi.addJobComment).mockResolvedValue({
+        success: false,
+        message: 'Comment cannot be empty'
+      })
+
+      const result = await store.addComment(1, 4, 'Bob Williams', '')
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Comment cannot be empty')
+    })
+  })
+
+  describe('verifyOtp', () => {
+    it('should verify OTP successfully', async () => {
+      const store = useJobsStore()
+      const jobWithOtp = {
+        ...mockJob,
+        customerOtp: '1234',
+        otpVerified: false
+      }
+      store.currentJob = jobWithOtp
+      store.jobs = [jobWithOtp]
+
+      const verifiedJob = {
+        ...jobWithOtp,
+        otpVerified: true
+      }
+
+      vi.mocked(mockApi.verifyJobOtp).mockResolvedValue({
+        success: true,
+        data: verifiedJob
+      })
+
+      const result = await store.verifyOtp(1, '1234')
+
+      expect(result).toEqual(verifiedJob)
+      expect(mockApi.verifyJobOtp).toHaveBeenCalledWith(1, '1234')
+      expect(store.currentJob?.otpVerified).toBe(true)
+    })
+
+    it('should handle incorrect OTP', async () => {
+      const store = useJobsStore()
+
+      vi.mocked(mockApi.verifyJobOtp).mockResolvedValue({
+        success: false,
+        message: 'Invalid OTP code'
+      })
+
+      const result = await store.verifyOtp(1, '0000')
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Invalid OTP code')
+    })
+
+    it('should update jobs array when OTP verified', async () => {
+      const store = useJobsStore()
+      const jobWithOtp = {
+        ...mockJob,
+        id: 3,
+        customerOtp: '1234',
+        otpVerified: false
+      }
+      store.jobs = [mockJob, jobWithOtp]
+
+      const verifiedJob = {
+        ...jobWithOtp,
+        otpVerified: true
+      }
+
+      vi.mocked(mockApi.verifyJobOtp).mockResolvedValue({
+        success: true,
+        data: verifiedJob
+      })
+
+      await store.verifyOtp(3, '1234')
+
+      const updatedJob = store.jobs.find(j => j.id === 3)
+      expect(updatedJob?.otpVerified).toBe(true)
+    })
+
+    it('should handle empty OTP', async () => {
+      const store = useJobsStore()
+
+      vi.mocked(mockApi.verifyJobOtp).mockResolvedValue({
+        success: false,
+        message: 'OTP code is required'
+      })
+
+      const result = await store.verifyOtp(1, '')
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('OTP code is required')
+    })
+  })
+
+  describe('markEnroute', () => {
+    it('should mark job as enroute successfully', async () => {
+      const store = useJobsStore()
+      const scheduledJob = {
+        ...mockJob,
+        status: 'Scheduled' as const
+      }
+      store.currentJob = scheduledJob
+      store.jobs = [scheduledJob]
+
+      const enrouteJob = {
+        ...scheduledJob,
+        enrouteAt: new Date('2025-01-16T08:00:00')
+      }
+
+      vi.mocked(mockApi.markJobEnroute).mockResolvedValue({
+        success: true,
+        data: enrouteJob
+      })
+
+      const result = await store.markEnroute(1)
+
+      expect(result).toEqual(enrouteJob)
+      expect(mockApi.markJobEnroute).toHaveBeenCalledWith(1)
+      expect(store.currentJob?.enrouteAt).toBeDefined()
+    })
+
+    it('should handle mark enroute error', async () => {
+      const store = useJobsStore()
+
+      vi.mocked(mockApi.markJobEnroute).mockResolvedValue({
+        success: false,
+        message: 'Job must be scheduled before marking enroute'
+      })
+
+      const result = await store.markEnroute(1)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Job must be scheduled before marking enroute')
+    })
+
+    it('should update jobs array when marked enroute', async () => {
+      const store = useJobsStore()
+      const scheduledJob = {
+        ...mockJob,
+        id: 10,
+        status: 'Scheduled' as const
+      }
+      store.jobs = [mockJob, scheduledJob]
+
+      const enrouteJob = {
+        ...scheduledJob,
+        enrouteAt: new Date('2025-01-16T08:00:00')
+      }
+
+      vi.mocked(mockApi.markJobEnroute).mockResolvedValue({
+        success: true,
+        data: enrouteJob
+      })
+
+      await store.markEnroute(10)
+
+      const updatedJob = store.jobs.find(j => j.id === 10)
+      expect(updatedJob?.enrouteAt).toBeDefined()
+    })
+
+    it('should handle job not found', async () => {
+      const store = useJobsStore()
+
+      vi.mocked(mockApi.markJobEnroute).mockResolvedValue({
+        success: false,
+        message: 'Job not found'
+      })
+
+      const result = await store.markEnroute(999)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Job not found')
+    })
+  })
 })
